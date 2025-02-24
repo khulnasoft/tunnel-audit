@@ -1,0 +1,18 @@
+rules:
+  default:
+    level: ignore
+  custom:
+    naming-convention:
+      level: error
+      conventions:
+        - pattern: '^builtin|lib|defsec|appshield'
+          targets:
+            - package
+    invalid-metadata:
+      level: error
+  naming:
+    deny-rule:
+      level: error
+      ignore:
+        files:
+          - "*_test.rego"

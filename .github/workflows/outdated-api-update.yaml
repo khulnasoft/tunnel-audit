@@ -1,0 +1,47 @@
+name: update outdated-api policy
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 0 * * 0" # Sunday midnight
+permissions:
+  contents: write
+
+env:
+  GO_VERSION: '1.23'
+
+jobs:
+  outdated:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTO_COMMIT_TOKEN }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Fetch outdated API data from tunnel-db-data repo
+        id: outdatedapi
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: "https://raw.githubusercontent.com/khulnasoft-lab/tunnel-db-data/main/k8s/api/k8s-outdated-api.json"
+          method: "GET"
+      - name: embed outdatedapi-data with in dynamic rego policy
+        env:
+          OUTDATE_API_DATA: ${{ toJson(steps.outdatedapi.outputs.response) }}
+        run: |
+          make outdated-api-updated
+      
+      - name: Setup OPA
+        uses: ./.github/actions/setup-opa
+
+      - name: OPA Format
+        run: |
+          opa fmt -w . | grep -v vendor || true
+      - name: commit and push updated outdated-api policy when changes found
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Update outdated-api policy data
+          push_options: --force
