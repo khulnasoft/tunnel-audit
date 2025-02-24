@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.AUTO_COMMIT_TOKEN }}
+          token: ${{ secrets.ORG_REPO_TOKEN }}
 
       - uses: actions/setup-go@v5
         with:
